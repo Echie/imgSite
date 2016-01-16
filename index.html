@@ -7,17 +7,18 @@
 </head>
 
 <body>
-    <!-- <input type="file" id="addFile" name="files[]" multiple /> -->
-
-    <form id="fileForm" action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" id="addFile" name="imgFile" />
+    <div id="errorDiv">
+    </div>
+    <form id="fileForm" action="/uploads" method="post" enctype="multipart/form-data">
+        <input type="file" id="addFile" name="imgFile" accept=".png, .jpg" />
         <br>
-        <button>Send the file</button>
+        <button id="sendButton" disabled>Send the file</button>
 
     </form>
 
     <output id="list"></output>
 
+    <div id="imageDiv"></div>
 
 </body>
 

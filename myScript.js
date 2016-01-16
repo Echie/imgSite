@@ -1,31 +1,47 @@
 $(document).ready(function()
 {
-    console.log('js works');
-    /*
-    $('#fileForm').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url : window.location.pathname,
-            type: "POST",
-            data: $(this),
-            success: function (data) {
-                $('#list').append('<ul>yey!</ul');
+    // getImages();
 
-                // $("#form_output").html(data);
-            },
-            error: function (jXHR, textStatus, errorThrown) {
-                alert(errorThrown);
-            }
-        });
-    });
-    */
     if (window.File && window.FileReader && window.FileList && window.Blob)
     {
-        // Great success! All the File APIs are supported.
-        // $('#addFile').on('change', addImg);
+        $('#fileForm').on('submit', function(e)
+        {
+            e.preventDefault();
+
+            if ( $('#addFile').val() == "" )
+            {
+                alert('No file chosen!');
+                return;
+            }
+
+            var data = new FormData($('#fileForm')[0]);
+            $.ajax(
+            {
+                url : window.location.pathname + 'uploads',
+                type: "POST",
+                data: data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data)
+                {
+                    $('#list').append('<ul>yey!</ul');
+                },
+                error: function (jXHR, textStatus, errorThrown)
+                {
+                    alert(textStatus + ':\n' + errorThrown);
+                },
+            });
+        });
+
+        // All the File APIs are supported.
+        $('#sendButton').attr("disabled", false);
     }
     else
+    {
         alert('The File APIs are not fully supported in this browser.');
+    }
+
 });
 
 function addImg(evt)
@@ -44,4 +60,23 @@ function addImg(evt)
             '</li>');
     }
     document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+}
+
+function getImages()
+{
+    // GET images
+    $.ajax(
+    {
+        url : window.location.pathname + 'uploads/fullsize',
+        type: "GET",
+        success: function (data)
+        {
+            $('#list').append('<ul>yey!</ul');
+        },
+        error: function (jXHR, textStatus, errorThrown)
+        {
+            $('#errorDiv').empty();
+            $('#errorDiv').append(textStatus + ':\n' + errorThrown);
+        },
+    });
 }
