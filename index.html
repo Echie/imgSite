@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>imgShop</title>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="myScript.js"></script>
+</head>
+
+<body>
+    <!-- <input type="file" id="addFile" name="files[]" multiple /> -->
+
+    <form id="fileForm" action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" id="addFile" name="imgFile" />
+        <br>
+        <button>Send the file</button>
+
+    </form>
+
+    <output id="list"></output>
+
+
+</body>
+
+</html>
