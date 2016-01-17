@@ -32,6 +32,12 @@ app.get('/client.js', function (req, res)
     res.send(fs.readFileSync("client.js", "utf8"));
 });
 
+app.get('/style.css', function (req, res)
+{
+    console.log('GET: style.css');
+    res.send(fs.readFileSync("style.css", "utf8"));
+});
+
 app.get('/uploads/*.*', function (req, res)
 {
     console.log('GET: ' + req.url);
