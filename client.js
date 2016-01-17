@@ -10,7 +10,7 @@ $(document).ready(function()
 
             if ( $('#addFile').val() == "" )
             {
-                alert('No file chosen!');
+                $('#errorDiv').empty().append('No file chosen!');
                 return;
             }
 
@@ -29,7 +29,7 @@ $(document).ready(function()
                 },
                 error: function (jXHR, textStatus, errorThrown)
                 {
-                    alert(textStatus + ':\n' + errorThrown);
+                    $('#errorDiv').empty().append(textStatus + ':\n' + errorThrown);
                 },
             });
         });
@@ -39,7 +39,7 @@ $(document).ready(function()
     }
     else
     {
-        alert('The File APIs are not fully supported in this browser.');
+        $('#errorDiv').empty().append('File APIs not supported.');
     }
 
 });
@@ -75,8 +75,7 @@ function getImages()
         },
         error: function (jXHR, textStatus, errorThrown)
         {
-            $('#errorDiv').empty();
-            $('#errorDiv').append(textStatus + ':\n' + errorThrown);
+            $('#errorDiv').empty().append(textStatus + ':\n' + errorThrown);
         },
     });
 }
