@@ -67,20 +67,6 @@ function getThumbnails()
 function openImage(el)
 {
     console.log('openImage clicked: ' + el);
-    var name = el.attr('filename').split('.')
-    name = name[0];
-    window.location.replace('/img/'+el.attr('filename'));
-
-    // $.ajax(
-    // {
-    //     url : window.location.pathname + '/img/'+ el.attr('filename'),
-    //     type: "GET",
-    //     success: function (data)
-    //     {
-    //     },
-    //      error: function (jXHR, textStatus, errorThrown)
-    //     {
-    //         $('#errorDiv').empty().append(textStatus + ':\n' + errorThrown);
-    //     },
-    // });
+    var name = el.attr('filename').split('.')[0]
+    window.location.href = '/img/' + name;
 }

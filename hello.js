@@ -6,6 +6,7 @@ var sqlite3 = require('sqlite3');
 var randomstring = require("randomstring");
 var path = require('path');
 var cheerio = require('cheerio');
+var app = module.exports = express();
 // var parser = require('exif-parser')
 
 var port = 8000;
@@ -18,8 +19,6 @@ acceptedHeaders.forEach(function(el, ind, arr)
     el = el.substr(1);
     acceptedHeaders[ind] = 'image/' + el;
 });
-
-var app = module.exports = express();
 
 app.get('/', function (req, res)
 {
@@ -53,25 +52,34 @@ app.get('/uploads/*.*', function (req, res)
     });
 });
 
-app.get('/img/*.*', function(req, res, next)
+app.get('/img/*', function(req, res, next)
 {
     var fileName = req.url.split("/");
     fileName = fileName[fileName.length - 1]
-    var extension = fileName.split('.');
-    extension = extension[extension.length - 1];
 
     console.log('GET: ' + fileName);
 
     var imgPath = __dirname + '/uploads/fullsize/' + fileName;
-    var data = fs.readFileSync(imgPath);
 
+    // Iterate through accepted file extensions
+    var data, extension;
+    acceptedFileTypes.every(function(el, ind, arr)
+    {
+        data = fs.readFileSync(imgPath + el);
+        if (data != undefined)
+        {
+            extension = el;
+            return false;
+        }
+    });
 
-    var img = '';
-    img += 'data:image/'+extension+';base64,';
-    img += new Buffer(data).toString('base64');
+    // Form response
+    var imgSrc = '';
+    imgSrc += 'data:image/'+extension+';base64,';
+    imgSrc += new Buffer(data).toString('base64');
 
     var $ = cheerio.load(fs.readFileSync(__dirname + '/img.html'));
-    $('#img').attr('src', img);
+    $('#img').attr('src', imgSrc);
 
     res.send($.html());
 });
@@ -91,7 +99,8 @@ app.get('/uploads/thumbs', function(req, res, next)
 
             var data = fs.readFileSync(directory + '/' + files[i]);
 
-            imageLists += '<img filename="'+fileName+'" src="data:image/'+extension+';base64,';
+            imageLists += '<img filename="'+fileName+
+                '" src="data:image/'+extension+';base64,';
             imageLists += new Buffer(data).toString('base64');
             imageLists += '"/>';
 
