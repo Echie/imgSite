@@ -5,6 +5,7 @@ var lwip = require('lwip');
 var sqlite3 = require('sqlite3');
 var randomstring = require("randomstring");
 var path = require('path');
+var cheerio = require('cheerio');
 // var parser = require('exif-parser')
 
 var port = 8000;
@@ -52,13 +53,28 @@ app.get('/uploads/*.*', function (req, res)
     });
 });
 
-app.get('/uploads/fullsize/*.*', function(req, res, next)
+app.get('/img/*.*', function(req, res, next)
 {
-    console.log('GET: /uploads/fullsize');
+    var fileName = req.url.split("/");
+    fileName = fileName[fileName.length - 1]
+    var extension = fileName.split('.');
+    extension = extension[extension.length - 1];
 
-    res.status(501).redirect('/');
+    console.log('GET: ' + fileName);
+
+    var imgPath = __dirname + '/uploads/fullsize/' + fileName;
+    var data = fs.readFileSync(imgPath);
+
+
+    var img = '';
+    img += 'data:image/'+extension+';base64,';
+    img += new Buffer(data).toString('base64');
+
+    var $ = cheerio.load(fs.readFileSync(__dirname + '/img.html'));
+    $('#img').attr('src', img);
+
+    res.send($.html());
 });
-
 
 app.get('/uploads/thumbs', function(req, res, next)
 {
@@ -70,7 +86,7 @@ app.get('/uploads/thumbs', function(req, res, next)
         for (var i=0; i<files.length; i++)
         {
             var fileName = files[i];
-            var extension = fileName.split('.')
+            var extension = fileName.split('.');
             extension = extension[extension.length - 1];
 
             var data = fs.readFileSync(directory + '/' + files[i]);
