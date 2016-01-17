@@ -4,10 +4,12 @@ var multiparty = require('multiparty');
 var lwip = require('lwip');
 var sqlite3 = require('sqlite3');
 var randomstring = require("randomstring");
+var path = require('path');
+// var parser = require('exif-parser')
 
 var port = 8000;
 var imgSizeLimitMB = 5;
-var acceptedFileTypes = ['.png', '.jpg'];
+var acceptedFileTypes = ['.png', '.jpg', '.jpeg'];
 
 var acceptedHeaders =  acceptedFileTypes.slice();
 acceptedHeaders.forEach(function(el, ind, arr)
@@ -49,49 +51,40 @@ app.get('/uploads/*.*', function (req, res)
         }
     });
 });
-/*
-app.get('/uploads/thumbs', function(req, res, next)
+
+app.get('/uploads/fullsize/*.*', function(req, res, next)
 {
-    console.log('GET: /uploads/thumbs');
-    // var db = new sqlite3.Database('imgSite.db');
+    console.log('GET: /uploads/fullsize');
 
     res.status(501).redirect('/');
 });
-*/
 
-app.get('/uploads/fullsize', function(req, res, next)
+
+app.get('/uploads/thumbs', function(req, res, next)
 {
-
-});
-
-/* OLD GET OF IMAGES
-app.get('/uploads/fullsize', function(req, res, next)
-{
-    console.log('GET: /uploads/fullsize');
-    var db = new sqlite3.Database('imgSite.db');
-    console.log("imgSite.db: " + db);
-    db.all("SELECT fileName FROM Image", function(err, rows)
+    console.log('GET: thumbnails');
+    var directory = __dirname + '/uploads/thumbs';
+    getImages(directory, function (err, files)
     {
-        // Iterate through file names
-        res.write('<html><body>');
-        rows.forEach(function(el, ind, arr)
+        var imageLists = '';
+        for (var i=0; i<files.length; i++)
         {
-            var type = el.fileName.split(".");
-            type = type[type.length - 1];
+            var fileName = files[i];
+            var extension = fileName.split('.')
+            extension = extension[extension.length - 1];
 
-            var path = __dirname + '/uploads/fullsize/' + el.fileName;
-            console.log('path: ' + path);
+            var data = fs.readFileSync(directory + '/' + files[i]);
 
-            fs.readFile(path, function(err, data)
-            {
-                res.writeHead(200, {'Content-Type': 'image/jpeg'});
-                res.end(data); // Send the file data to the browser
-            });
-        });
+            imageLists += '<img filename="'+fileName+'" src="data:image/'+extension+';base64,';
+            imageLists += new Buffer(data).toString('base64');
+            imageLists += '"/>';
+
+        }
+        res.writeHead(200, {'Content-type':'text/html'});
+        res.end(imageLists);
     });
-    // res.status(501).redirect('/');
 });
-*/
+
 app.post('/uploads', function(req, res, next)
 {
     console.log('POST: /uploads');
@@ -106,17 +99,12 @@ app.post('/uploads', function(req, res, next)
         console.log('content-type: ' + type);
 
         // Check file size
-        if ( (img.size / 1000000) > imgSizeLimitMB )
-        {
+        if ( size > imgSizeLimitMB )
             return res.status(403).send('Image size limited to 5MB');
-
-        }
 
         // Check extension
         if (!(acceptedHeaders.indexOf(type) > -1))
-        {
-            return res.status(403).send('Only png and jpg allowed');
-        }
+            return res.status(403).send('Only .png, .jpg and .jpeg allowed');
         else
         {
             extension = type.split('/')
@@ -172,16 +160,14 @@ if (!module.parent)
 
 function getImages(imageDir, callback)
 {
-    var fileType = '.jpg';
-    var files = []
+    var files = [];
     var i;
     fs.readdir(imageDir, function (err, list)
     {
         for(i=0; i<list.length; i++)
         {
             // Store the file name into the array files
-
-            if (acceptedHeaders.indexOf(type) > -1)
+            if (acceptedFileTypes.indexOf(path.extname(list[i])) > -1)
                 files.push(list[i]);
         }
     callback(err, files);

@@ -1,9 +1,12 @@
 $(document).ready(function()
 {
-    // getImages();
+    getThumbnails();
 
     if (window.File && window.FileReader && window.FileList && window.Blob)
     {
+        // All the File APIs are supported.
+        $('#sendButton').attr("disabled", false);
+
         $('#fileForm').on('submit', function(e)
         {
             e.preventDefault();
@@ -14,18 +17,17 @@ $(document).ready(function()
                 return;
             }
 
-            var data = new FormData($('#fileForm')[0]);
             $.ajax(
             {
                 url : window.location.pathname + 'uploads',
                 type: "POST",
-                data: data,
+                data: new FormData($('#fileForm')[0]),
                 cache: false,
                 contentType: false,
                 processData: false,
                 success: function (data)
                 {
-                    $('#list').append('<ul>yey!</ul');
+                    getThumbnails();
                 },
                 error: function (jXHR, textStatus, errorThrown)
                 {
@@ -33,9 +35,6 @@ $(document).ready(function()
                 },
             });
         });
-
-        // All the File APIs are supported.
-        $('#sendButton').attr("disabled", false);
     }
     else
     {
@@ -44,36 +43,41 @@ $(document).ready(function()
 
 });
 
-function addImg(evt)
+function getThumbnails()
 {
-
-    var files = evt.target.files; // FileList object
-
-    // files is a FileList of File objects. List some properties.
-    var output = [];
-    for (var i = 0, f; f = files[i]; i++)
-    {
-        output.push('<li><strong>', escape(f.name), '</strong> (',
-            f.type || 'n/a', ') - ',
-            f.size, ' bytes, last modified: ',
-            f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
-            '</li>');
-    }
-    document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
-}
-
-function getImages()
-{
-    // GET images
     $.ajax(
     {
-        url : window.location.pathname + 'uploads/fullsize',
+        url : window.location.pathname + 'uploads/thumbs',
         type: "GET",
         success: function (data)
         {
-            $('#list').append('<ul>yey!</ul');
+            $('#imageDiv').empty().append(data);
+            $('#imageDiv img').click(function()
+            {
+                openImage($(this));
+            });
         },
         error: function (jXHR, textStatus, errorThrown)
+        {
+            $('#errorDiv').empty().append(textStatus + ':\n' + errorThrown);
+        },
+    });
+}
+
+function openImage(el)
+{
+    console.log('openImage clicked: ' + el);
+    var i = 0;
+
+    $.ajax(
+    {
+        url : window.location.pathname + 'uploads/fullsize/'+ el.attr('filename'),
+        type: "GET",
+        success: function (data)
+        {
+
+        },
+         error: function (jXHR, textStatus, errorThrown)
         {
             $('#errorDiv').empty().append(textStatus + ':\n' + errorThrown);
         },
