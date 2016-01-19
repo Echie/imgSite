@@ -2,7 +2,6 @@ var fs = require('fs');
 var express = require('express');
 var multiparty = require('multiparty');
 var lwip = require('lwip');
-var sqlite3 = require('sqlite3');
 var randomstring = require("randomstring");
 var path = require('path');
 var cheerio = require('cheerio');
@@ -258,12 +257,15 @@ function getImages(imageDir, callback)
     var i;
     fs.readdir(imageDir, function (err, list)
     {
-        for(i=0; i<list.length; i++)
-        {
-            // Store the file name into the array files
-            if (acceptedFileTypes.indexOf(path.extname(list[i])) > -1)
-                files.push(list[i]);
-        }
+	if (typeof list != 'undefined')
+	{
+	        for(i=0; i<list.length; i++)
+        	{
+	            // Store the file name into the array files
+	            if (acceptedFileTypes.indexOf(path.extname(list[i])) > -1)
+	                files.push(list[i]);
+	        }
+	}
     callback(err, files);
     });
 }
