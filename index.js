@@ -66,7 +66,6 @@ function getThumbnails()
 
 function openImage(el)
 {
-    console.log('openImage clicked: ' + el);
     var name = el.attr('filename').split('.')[0]
     window.location.href = '/img/' + name;
 }

@@ -1,16 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Image</title>
+    <title>imgSite</title>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="jquery.form.min.js"></script>
+
+    <script>
+        $(document).ready(function()
+        {
+            $('#commentForm').ajaxForm(function ()
+            {
+                window.location.replace(window.location.pathname);
+            });
+            $('#backButton').click(function()
+            {
+                window.location.href = "/";
+            });
+        });
+    </script>
+
 </head>
 
 <body>
-    <!-- <button id="backButton"  -->
+    <button id="backButton">Backw</button>
     <div id="imageDiv">
         <img id="img"/>
     </div>
-    <div id="commentDiv"></div>
+
+    <div id="errorDiv"></div>
+
+    <div id="commentDiv">
+
+        <form id="commentForm" method="post">
+
+            <input type="text" id="commentInput" name="comment"/>
+            <br>
+            <button id="sendButton">Add comment</button>
+
+        </form>
+
+        <ul id="commentList"></ul>
+    </div>
 </body>
 
 </html>

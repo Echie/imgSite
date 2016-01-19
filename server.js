@@ -6,8 +6,9 @@ var sqlite3 = require('sqlite3');
 var randomstring = require("randomstring");
 var path = require('path');
 var cheerio = require('cheerio');
+var bodyParser = require('body-parser')
 var app = module.exports = express();
-// var parser = require('exif-parser')
+app.use(bodyParser.urlencoded( { extended: true }));
 
 var port = 8000;
 var imgSizeLimitMB = 5;
@@ -26,10 +27,13 @@ app.get('/', function (req, res)
     res.send(fs.readFileSync("index.html", "utf8"));
 });
 
-app.get('/client.js', function (req, res)
+app.get('/*.js', function (req, res)
 {
-    console.log('GET: client.js');
-    res.send(fs.readFileSync("client.js", "utf8"));
+    var fileName = req.url.split('/');
+    fileName = fileName[fileName.length - 1];
+
+    console.log('GET: ' + fileName);
+    res.send(fs.readFileSync(fileName, "utf8"));
 });
 
 app.get('/style.css', function (req, res)
@@ -38,58 +42,7 @@ app.get('/style.css', function (req, res)
     res.send(fs.readFileSync("style.css", "utf8"));
 });
 
-app.get('/uploads/*.*', function (req, res)
-{
-    console.log('GET: ' + req.url);
-    fs.readFile(__dirname + req.url, function(err, data) {
-        if (err)
-        {
-            console.log('404 not found');
-            res.status(404).send('Not found');
-        }
-        else
-        {
-            var type = req.url.split(".");
-            type = type[type.length - 1];
-
-            res.writeHead(200, {'Content-Type': 'image/'+ type});
-            res.end(data);
-        }
-    });
-});
-
-app.get('/img/*', function(req, res, next)
-{
-    var fileName = req.url.split("/");
-    fileName = fileName[fileName.length - 1]
-
-    console.log('GET: ' + fileName);
-
-    var imgPath = __dirname + '/uploads/fullsize/' + fileName;
-
-    // Iterate through accepted file extensions
-    var data, extension;
-    acceptedFileTypes.every(function(el, ind, arr)
-    {
-        data = fs.readFileSync(imgPath + el);
-        if (data != undefined)
-        {
-            extension = el;
-            return false;
-        }
-    });
-
-    // Form response
-    var imgSrc = '';
-    imgSrc += 'data:image/'+extension+';base64,';
-    imgSrc += new Buffer(data).toString('base64');
-
-    var $ = cheerio.load(fs.readFileSync(__dirname + '/img.html'));
-    $('#img').attr('src', imgSrc);
-
-    res.send($.html());
-});
-
+// Return all thumbnails
 app.get('/uploads/thumbs', function(req, res, next)
 {
     console.log('GET: thumbnails');
@@ -116,6 +69,116 @@ app.get('/uploads/thumbs', function(req, res, next)
     });
 });
 
+// Return an image + comments
+app.get('/img/*', function(req, res, next)
+{
+    var fileName = req.url.split("/");
+    fileName = fileName[fileName.length - 1]
+
+    console.log('GET image: ' + fileName);
+
+    var imgPath = __dirname + '/uploads/fullsize/' + fileName;
+
+    var data, extension;
+
+    // Try to open image with all accepted file extensions
+    acceptedFileTypes.every(function(el, ind, arr)
+    {
+        try { data = fs.readFileSync(imgPath + el); }
+        catch (e)
+        {
+            // Continue if expected error, log otherwise
+            if (e.code === 'ENOENT') return true;
+            else console.log(e);
+        }
+        if (data != undefined)
+        {
+            extension = el;
+            return false;
+        }
+    });
+
+    // Form response
+    var imgSrc = '';
+    imgSrc += 'data:image/'+extension+';base64,';
+    imgSrc += new Buffer(data).toString('base64');
+
+    var $ = cheerio.load(fs.readFileSync(__dirname + '/img.html'));
+    $('#img').attr('src', imgSrc);
+
+    // Open comments JSON file
+    var commentPath = __dirname + '/uploads/comments/' + fileName + '.json';
+    var commentsJSON;
+    try { commentsJSON = fs.readFileSync(commentPath); }
+    catch (e)
+    {
+        // Create file if there's no comments
+        if (e.code === 'ENOENT')
+        {
+            fs.writeFileSync(commentPath, '[]');
+            console.log('Created comment file for: ' + fileName);
+            commentsJSON = '[]';
+        }
+        else console.log(e);
+    }
+
+    var comments = JSON.parse(commentsJSON);
+
+    for(var i = 0; i < comments.length; i++)
+    {
+        var comment = comments[i];
+
+        $('#commentList').append('<li>' + comment['timestamp'] + ': ' +
+            comment['text']);
+        $('#commentList').append('</li>');
+
+    }
+    res.send($.html());
+});
+
+// Post a comment
+app.post('/img/*', function(req, res, next)
+{
+    var fileName = req.url.split('/');
+    fileName = fileName[fileName.length - 1];
+
+    console.log('Comment posted on: ' + fileName + ': ' + req.body.comment);
+
+    var commentPath = __dirname + '/uploads/comments/' + fileName + '.json';
+
+    // Open and parse comments
+    var commentsJSON;
+    try { commentsJSON = fs.readFileSync(commentPath); }
+    catch (e) { console.log(e); }
+
+    var comments = JSON.parse(commentsJSON);
+
+    // Form timestamp string
+    var date = new Date(Date.now());
+
+    var time = date.getDate() + '.' + (date.getMonth()+1) + '.' +
+    date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() +
+    ':'+ date.getSeconds();
+
+    // Push new comments to array
+    comments.push({
+            "timestamp": time,
+            "text": req.body.comment
+        })
+
+    // Update file
+    fs.writeFile(commentPath, JSON.stringify(comments), function(err) {
+
+        if(err) return console.log(err);
+        console.log("Comment was saved.");
+    });
+
+    res.sendStatus(200);
+    // res.redirect('back');
+});
+
+
+// Post a new image
 app.post('/uploads', function(req, res, next)
 {
     console.log('POST: /uploads');
@@ -157,14 +220,14 @@ app.post('/uploads', function(req, res, next)
                 console.error('Error while saving file: ' + err.stack);
         });
 
-        // Save the 50x50 thumbnail
+        // Save the 100x100 thumbnail
         console.log('Saving thumbnail to: ' + target_path);
         lwip.open(target_path, function(err, image)
         {
             if (err)
                 console.error('Error while opening image: ' + err.stack);
 
-            image.resize(50, 50, function(err, image) {
+            image.resize(100, 100, function(err, image) {
                 if (err)
                     console.error('Error while saving thumbnail: ' +
                         err.stack);
