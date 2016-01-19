@@ -6,9 +6,10 @@ var randomstring = require("randomstring");
 var path = require('path');
 var cheerio = require('cheerio');
 var bodyParser = require('body-parser')
+var validator = require('validator');
 var app = module.exports = express();
 app.use(bodyParser.urlencoded( { extended: true }));
-
+app.use(express.static('static'));
 var port = 8000;
 var imgSizeLimitMB = 5;
 var acceptedFileTypes = ['.png', '.jpg', '.jpeg'];
@@ -24,21 +25,6 @@ app.get('/', function (req, res)
 {
     console.log('GET: index.html')
     res.send(fs.readFileSync("index.html", "utf8"));
-});
-
-app.get('/*.js', function (req, res)
-{
-    var fileName = req.url.split('/');
-    fileName = fileName[fileName.length - 1];
-
-    console.log('GET: ' + fileName);
-    res.send(fs.readFileSync(fileName, "utf8"));
-});
-
-app.get('/style.css', function (req, res)
-{
-    console.log('GET: style.css');
-    res.send(fs.readFileSync("style.css", "utf8"));
 });
 
 // Return all thumbnails
@@ -105,7 +91,7 @@ app.get('/img/*', function(req, res, next)
     var $ = cheerio.load(fs.readFileSync(__dirname + '/img.html'));
     $('#img').attr('src', imgSrc);
 
-    // Open comments JSON file
+    // Open §s JSON file
     var commentPath = __dirname + '/uploads/comments/' + fileName + '.json';
     var commentsJSON;
     try { commentsJSON = fs.readFileSync(commentPath); }
@@ -127,9 +113,10 @@ app.get('/img/*', function(req, res, next)
     {
         var comment = comments[i];
 
-        $('#commentList').append('<li>' + comment['timestamp'] + ': ' +
-            comment['text']);
-        $('#commentList').append('</li>');
+        $('#comments').append('<li class="list-group-item">' +
+            '<p class="p-timestamp">' + comment['timestamp'] + '</p>' +
+            '<p class="p-comment">' + comment['text'] + '</p>');
+        $('#comments').append('</li>');
 
     }
     res.send($.html());
@@ -219,14 +206,14 @@ app.post('/uploads', function(req, res, next)
                 console.error('Error while saving file: ' + err.stack);
         });
 
-        // Save the 100x100 thumbnail
+        // Save the 200x200 thumbnail
         console.log('Saving thumbnail to: ' + target_path);
         lwip.open(target_path, function(err, image)
         {
             if (err)
                 console.error('Error while opening image: ' + err.stack);
 
-            image.resize(100, 100, function(err, image) {
+            image.resize(200, 200, function(err, image) {
                 if (err)
                     console.error('Error while saving thumbnail: ' +
                         err.stack);

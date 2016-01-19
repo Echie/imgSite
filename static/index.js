@@ -1,5 +1,6 @@
 $(document).ready(function()
 {
+    $('#noticeDiv').hide();
     getThumbnails();
 
     if (window.File && window.FileReader && window.FileList && window.Blob)
@@ -13,7 +14,7 @@ $(document).ready(function()
 
             if ( $('#addFile').val() == "" )
             {
-                $('#errorDiv').empty().append('No file chosen!');
+                showNotice('danger', 'No file chosen!');
                 return;
             }
 
@@ -31,16 +32,20 @@ $(document).ready(function()
                 },
                 error: function (jXHR, textStatus, errorThrown)
                 {
-                    $('#errorDiv').empty().append(textStatus + ':\n' + errorThrown);
+                    showNotice('danger', 'Something went wrong.');
                 },
             });
         });
     }
     else
     {
-        $('#errorDiv').empty().append('File APIs not supported.');
+        showNotice('danger', 'File APIs not supported.');
     }
 
+    $('#fileForm').ajaxForm(function ()
+    {
+        showNotice('success', 'Image uploaded succesfully!');
+    });
 });
 
 function getThumbnails()
@@ -51,15 +56,15 @@ function getThumbnails()
         type: "GET",
         success: function (data)
         {
-            $('#imageDiv').empty().append(data);
-            $('#imageDiv img').click(function()
+            $('#imageContainer').empty().append(data);
+            $('#imageContainer img').click(function()
             {
                 openImage($(this));
             });
         },
         error: function (jXHR, textStatus, errorThrown)
         {
-            $('#errorDiv').empty().append(textStatus + ':\n' + errorThrown);
+            showNotice('danger', 'Something went wrong.');
         },
     });
 }
@@ -68,4 +73,13 @@ function openImage(el)
 {
     var name = el.attr('filename').split('.')[0]
     window.location.href = '/img/' + name;
+}
+
+
+function showNotice(type, msg)
+{
+    $('#noticeDiv').removeClass('alert-danger').removeClass('alert-success');
+
+    $('#noticeDiv').empty().show().addClass('alert-'+type).append(msg);
+    setTimeout(function() { $('#noticeDiv').fadeOut('slow'); }, 3000)
 }

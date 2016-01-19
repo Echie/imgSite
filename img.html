@@ -3,43 +3,34 @@
 <head>
     <title>imgSite</title>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="jquery.form.min.js"></script>
-
-    <script>
-        $(document).ready(function()
-        {
-            $('#commentForm').ajaxForm(function ()
-            {
-                window.location.replace(window.location.pathname);
-            });
-            $('#backButton').click(function()
-            {
-                window.location.href = "/";
-            });
-        });
-    </script>
+    <script type="text/javascript" src="/jquery.form.min.js"></script>
+    <script type="text/javascript" src="/img.js"></script>
+    <link rel="stylesheet" type="text/css" href="/bootstrap.flatly.min.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
 
 </head>
 
 <body>
-    <button id="backButton">Back</button>
-    <div id="imageDiv">
-        <img id="img"/>
-    </div>
+    <div class="container">
+        <button id="backButton" class="btn btn-primary btn-sm">Back</button>
+        <div class="text-center">
+            <img id="img"/>
+        </div>
 
-    <div id="errorDiv"></div>
+        <div id="commentDiv" class="text-center">
+            <div id="noticeDiv" class="alert alert-dismissible"></div>
+            <form id="commentForm" method="post">
 
-    <div id="commentDiv">
+                <input type="text" id="commentInput" name="comment"/>
+                <button id="sendButton">Add comment</button>
 
-        <form id="commentForm" method="post">
+            </form>
 
-            <input type="text" id="commentInput" name="comment"/>
-            <br>
-            <button id="sendButton">Add comment</button>
-
-        </form>
-
-        <ul id="commentList"></ul>
+            <div id="commentContainer">
+                <div id="comments" class="list-group">
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 
