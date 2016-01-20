@@ -175,7 +175,14 @@ app.post('/uploads', function(req, res, next)
     var form = new multiparty.Form();
 
     form.parse(req, function(err, fields, files) {
-        var img = files.imgFile[0];
+	var img;
+	try {
+		img = files.imgFile[0];
+	}
+	catch (e) {
+		console.log('Error while accessing image: ' + e);
+		return res.status(403).send('Error while uploading image');
+	}
         var size = img.size / 1000000;
         var type = img.headers['content-type'];
         var extension = '';
