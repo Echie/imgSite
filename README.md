@@ -3,5 +3,6 @@ A practice demo project implemented with nodeJS.
 
 ToDo:
 - Rationalize & move functionality to client side
-- Implement an UI
+- Ordering of thumbnails
+- Improve UI
 - Security and error checks
