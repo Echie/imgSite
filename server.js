@@ -27,38 +27,42 @@ app.get('/', function (req, res)
     res.send(fs.readFileSync("index.html", "utf8"));
 });
 
-// Return all thumbnails
-app.get('/uploads/thumbs', function(req, res, next)
+// Return image filenames
+app.get('/uploads/names', function(req, res, next)
 {
-    console.log('GET: thumbnails');
-    var directory = __dirname + '/uploads/thumbs';
-    getImages(directory, function (err, files)
+    console.log('GET: file names');
+    getImages(__dirname + '/uploads/thumbs', function (err, files)
     {
-        var imageLists = '';
-        for (var i=0; i<files.length; i++)
-        {
-            var fileName = files[i];
-            var extension = fileName.split('.');
-            extension = extension[extension.length - 1];
-
-            var data = fs.readFileSync(directory + '/' + files[i]);
-
-            imageLists += '<img filename="'+fileName+
-                '" src="data:image/'+extension+';base64,';
-            imageLists += new Buffer(data).toString('base64');
-            imageLists += '"/>';
-
-        }
-        res.writeHead(200, {'Content-type':'text/html'});
-        res.end(imageLists);
+        res.writeHead(200, {'Content-type':'text/plain'});
+        res.end(files.join());
     });
+});
+
+// Get thumbnail
+app.get('/uploads/thumbs/*.*', function(req, res, next)
+{
+    // console.log('GET: ' + req.url)
+
+    var fileName = req.url.split("/").last();
+    var extension = fileName.split('.').last();
+
+    var data = fs.readFileSync(__dirname + req.url);
+
+    var imgHTML = '<img filename="'+fileName+
+        '" src="data:image/'+extension+';base64,';
+    imgHTML += new Buffer(data).toString('base64');
+    imgHTML += '"/>';
+
+    res.writeHead(200, {'Content-type':'text/html'});
+    res.end(imgHTML);
+
 });
 
 // Return an image + comments
 app.get('/img/*', function(req, res, next)
 {
-    var fileName = req.url.split("/");
-    fileName = fileName[fileName.length - 1]
+    var fileName = req.url.split("/").last();
+    // fileName = fileName[fileName.length - 1]
 
     console.log('GET image: ' + fileName);
 
@@ -125,8 +129,8 @@ app.get('/img/*', function(req, res, next)
 // Post a comment
 app.post('/img/*', function(req, res, next)
 {
-    var fileName = req.url.split('/');
-    fileName = fileName[fileName.length - 1];
+    var fileName = req.url.split('/').last();
+    // fileName = fileName[fileName.length - 1];
 
     console.log('Comment posted on: ' + fileName + ': ' + req.body.comment);
 
@@ -187,8 +191,8 @@ app.post('/uploads', function(req, res, next)
             return res.status(403).send('Only .png, .jpg and .jpeg allowed');
         else
         {
-            extension = type.split('/')
-            extension = extension[extension.length - 1];
+            extension = type.split('/').last();
+            // extension = extension[extension.length - 1];
         }
 
         // Rename the file
@@ -237,6 +241,12 @@ if (!module.parent)
   console.log('Listening on port ' + port);
 }
 
+// Shorthand to access last element
+if (!Array.prototype.last) {
+    Array.prototype.last = function() {
+        return this[this.length - 1];
+    };
+};
 
 function getImages(imageDir, callback)
 {

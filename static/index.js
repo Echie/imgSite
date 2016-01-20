@@ -1,12 +1,14 @@
 $(document).ready(function()
 {
     $('#noticeDiv').hide();
-    getThumbnails();
 
     if (window.File && window.FileReader && window.FileList && window.Blob)
     {
         // All the File APIs are supported.
         $('#sendButton').attr("disabled", false);
+
+        var files = getFileNames();
+        getThumbnails(files);
 
         $('#fileForm').on('submit', function(e)
         {
@@ -28,11 +30,12 @@ $(document).ready(function()
                 processData: false,
                 success: function (data)
                 {
-                    getThumbnails();
+                    // getThumbnails();
+                    getThumbnails(files);
                 },
                 error: function (jXHR, textStatus, errorThrown)
                 {
-                    showNotice('danger', 'Something went wrong.');
+                    showNotice('danger', 'Image upload failed!');
                 },
             });
         });
@@ -48,25 +51,55 @@ $(document).ready(function()
     });
 });
 
-function getThumbnails()
+// Get names of images on server
+function getFileNames()
 {
+    var files = [];
     $.ajax(
     {
-        url : window.location.pathname + 'uploads/thumbs',
+        async: false,
+        url : window.location.pathname + 'uploads/names',
         type: "GET",
         success: function (data)
         {
-            $('#imageContainer').empty().append(data);
-            $('#imageContainer img').click(function()
-            {
-                openImage($(this));
-            });
+            showNotice('success', 'Got file names!');
+            files = data.split(',');
         },
         error: function (jXHR, textStatus, errorThrown)
         {
-            showNotice('danger', 'Something went wrong.');
+            showNotice('danger', 'Something went wrong!');
         },
     });
+    return files;
+}
+
+function getThumbnails(files)
+{
+    console.log('getThumbnails: ');
+    $('#imageContainer').empty()
+    console.log(files);
+    for (var ind in files)
+    {
+        var file = files[ind];
+        // var file = files[0];
+        $.ajax(
+        {
+            url : window.location.pathname + 'uploads/thumbs/' + file,
+            type: "GET",
+            success: function (data)
+            {
+                $('#imageContainer').append(data);
+                $('#imageContainer img').click(function()
+                {
+                    openImage($(this));
+                });
+            },
+            error: function (jXHR, textStatus, errorThrown)
+            {
+                showNotice('danger', 'Loading of thumbnail failed!');
+            },
+        });
+    }
 }
 
 function openImage(el)
@@ -74,7 +107,6 @@ function openImage(el)
     var name = el.attr('filename').split('.')[0]
     window.location.href = '/img/' + name;
 }
-
 
 function showNotice(type, msg)
 {
