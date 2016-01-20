@@ -10,6 +10,8 @@ var validator = require('validator');
 var app = module.exports = express();
 app.use(bodyParser.urlencoded( { extended: true }));
 app.use(express.static('static'));
+
+var debug = true;
 var port = 8000;
 var imgSizeLimitMB = 5;
 var acceptedFileTypes = ['.png', '.jpg', '.jpeg'];
@@ -23,14 +25,14 @@ acceptedHeaders.forEach(function(el, ind, arr)
 
 app.get('/', function (req, res)
 {
-    console.log('GET: index.html')
+    if (debug) console.log('GET: index.html');
     res.send(fs.readFileSync("index.html", "utf8"));
 });
 
 // Return image filenames
 app.get('/uploads/names', function(req, res, next)
 {
-    console.log('GET: file names');
+    if (debug) console.log('GET: file names');
     getImages(__dirname + '/uploads/thumbs', function (err, files)
     {
         res.writeHead(200, {'Content-type':'text/plain'});
@@ -41,7 +43,7 @@ app.get('/uploads/names', function(req, res, next)
 // Get thumbnail
 app.get('/uploads/thumbs/*.*', function(req, res, next)
 {
-    // console.log('GET: ' + req.url)
+    if (debug) console.log('GET: ' + req.url);
 
     var fileName = req.url.split("/").last();
     var extension = fileName.split('.').last();
@@ -62,9 +64,8 @@ app.get('/uploads/thumbs/*.*', function(req, res, next)
 app.get('/img/*', function(req, res, next)
 {
     var fileName = req.url.split("/").last();
-    // fileName = fileName[fileName.length - 1]
 
-    console.log('GET image: ' + fileName);
+    if (debug) console.log('GET image: ' + fileName);
 
     var imgPath = __dirname + '/uploads/fullsize/' + fileName;
 
@@ -78,7 +79,7 @@ app.get('/img/*', function(req, res, next)
         {
             // Continue if expected error, log otherwise
             if (e.code === 'ENOENT') return true;
-            else console.log(e);
+            else console.error(e);
         }
         if (data != undefined)
         {
@@ -95,7 +96,7 @@ app.get('/img/*', function(req, res, next)
     var $ = cheerio.load(fs.readFileSync(__dirname + '/img.html'));
     $('#img').attr('src', imgSrc);
 
-    // Open §s JSON file
+    // Open JSON file
     var commentPath = __dirname + '/uploads/comments/' + fileName + '.json';
     var commentsJSON;
     try { commentsJSON = fs.readFileSync(commentPath); }
@@ -108,7 +109,7 @@ app.get('/img/*', function(req, res, next)
             console.log('Created comment file for: ' + fileName);
             commentsJSON = '[]';
         }
-        else console.log(e);
+        else console.error(e);
     }
 
     var comments = JSON.parse(commentsJSON);
@@ -130,16 +131,21 @@ app.get('/img/*', function(req, res, next)
 app.post('/img/*', function(req, res, next)
 {
     var fileName = req.url.split('/').last();
-    // fileName = fileName[fileName.length - 1];
 
-    console.log('Comment posted on: ' + fileName + ': ' + req.body.comment);
+    if (debug) console.log('Comment posted on: ' + fileName + ': ' + req.body.comment);
 
-    var commentPath = __dirname + '/uploads/comments/' + fileName + '.json';
+    // Sanitize Comment
+    var text = validator.escape(req.body.comment);
 
     // Open and parse comments
+    var commentPath = __dirname + '/uploads/comments/' + fileName + '.json';
     var commentsJSON;
     try { commentsJSON = fs.readFileSync(commentPath); }
-    catch (e) { console.log(e); }
+    catch (e)
+    {
+        console.error(e);
+        return res.status(404).end('Error while opening comment file.');
+    }
 
     var comments = JSON.parse(commentsJSON);
 
@@ -153,25 +159,28 @@ app.post('/img/*', function(req, res, next)
     // Push new comments to array
     comments.push({
             "timestamp": time,
-            "text": req.body.comment
+            "text": text
         })
 
     // Update file
     fs.writeFile(commentPath, JSON.stringify(comments), function(err) {
 
-        if(err) return console.log(err);
+        if(err)
+        {
+            console.error(err);
+            return res.status(403).end('Error while saving comment');
+        }
         console.log("Comment was saved.");
     });
 
     res.sendStatus(200);
-    // res.redirect('back');
 });
 
 
 // Post a new image
 app.post('/uploads', function(req, res, next)
 {
-    console.log('POST: /uploads');
+    if (debug) console.log('POST: /uploads');
     var form = new multiparty.Form();
 
     form.parse(req, function(err, fields, files) {
@@ -180,27 +189,23 @@ app.post('/uploads', function(req, res, next)
 		img = files.imgFile[0];
 	}
 	catch (e) {
-		console.log('Error while accessing image: ' + e);
+		console.error('Error while uploading image: ' + e);
 		return res.status(403).send('Error while uploading image');
 	}
         var size = img.size / 1000000;
         var type = img.headers['content-type'];
         var extension = '';
-        console.log('size: ' + size);
-        console.log('content-type: ' + type);
 
         // Check file size
         if ( size > imgSizeLimitMB )
-            return res.status(403).send('Image size limited to 5MB');
+            return res.status(403).send('Image size limited to '+
+            imgSizeLimitMB + 'MB');
 
         // Check extension
         if (!(acceptedHeaders.indexOf(type) > -1))
             return res.status(403).send('Only .png, .jpg and .jpeg allowed');
         else
-        {
             extension = type.split('/').last();
-            // extension = extension[extension.length - 1];
-        }
 
         // Rename the file
         var newFileName = randomstring.generate(10) + "." + extension;
@@ -208,7 +213,7 @@ app.post('/uploads', function(req, res, next)
         var tmp_path = img.path;
         var target_path = __dirname + '/uploads/fullsize/' + newFileName;
         var thumbPath = __dirname + '/uploads/thumbs/' + newFileName;
-        console.log('Saving file to: ' + target_path);
+        if (debug) console.log('Saving file to: ' + target_path);
 
         // Save the image
         fs.renameSync(tmp_path, target_path, function(err)
@@ -238,7 +243,7 @@ app.post('/uploads', function(req, res, next)
             });
         });
         res.redirect('/');
-        console.log('Upload completed!');
+        if (debug) console.log('Upload completed!');
     });
 });
 

@@ -30,7 +30,6 @@ $(document).ready(function()
                 processData: false,
                 success: function (data)
                 {
-                    // getThumbnails();
                     getThumbnails(files);
                 },
                 error: function (jXHR, textStatus, errorThrown)
@@ -62,7 +61,6 @@ function getFileNames()
         type: "GET",
         success: function (data)
         {
-            showNotice('success', 'Got file names!');
             files = data.split(',');
         },
         error: function (jXHR, textStatus, errorThrown)
@@ -75,13 +73,10 @@ function getFileNames()
 
 function getThumbnails(files)
 {
-    console.log('getThumbnails: ');
     $('#imageContainer').empty()
-    console.log(files);
     for (var ind in files)
     {
         var file = files[ind];
-        // var file = files[0];
         $.ajax(
         {
             url : window.location.pathname + 'uploads/thumbs/' + file,
@@ -96,7 +91,7 @@ function getThumbnails(files)
             },
             error: function (jXHR, textStatus, errorThrown)
             {
-                showNotice('danger', 'Loading of thumbnail failed!');
+                showNotice('danger', 'Loading of a thumbnail failed!');
             },
         });
     }
