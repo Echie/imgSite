@@ -6,3 +6,9 @@ ToDo:
 - Ordering of thumbnails
 - Improve UI
 - Security and error checks, user feedback
+
+# Front page
+![Front page](static/frontpage.png)
+
+# Image page
+![Front page](static/image.png)
