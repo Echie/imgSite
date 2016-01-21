@@ -172,6 +172,20 @@ app.post('/uploads', function(req, res, next)
                     });
             });
         });
+
+        // Initialize comments file
+        fs.writeFile(__dirname + '/uploads/comments/' +
+            newFileName.split('.')[0] + '.json',
+            JSON.stringify('[]'), function(err) {
+                if(err)
+                {
+                    console.error(err);
+                    return res.status(403).end('Error while initializing ' +
+                        'comments file');
+                }
+        });
+        console.log("Created comments file.");
+
         res.redirect('/');
         if (debug) console.log('Upload completed!');
     });
