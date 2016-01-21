@@ -2,6 +2,7 @@
 An ongoing demo project implemented with Node.js. Upload images and comment on them (without registering).
 
 ToDo:
+- Image scaling
 - Rationalize & move functionality to client side
 - Ordering of thumbnails
 - Improve UI
