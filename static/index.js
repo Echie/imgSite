@@ -1,3 +1,5 @@
+// TODO: Images and comments served as static?
+
 $(document).ready(function()
 {
     $('#noticeDiv').hide();
@@ -77,23 +79,11 @@ function getThumbnails(files)
     for (var ind in files)
     {
         var file = files[ind];
-        $.ajax(
-        {
-            url : window.location.pathname + 'uploads/thumbs/' + file,
-            type: "GET",
-            success: function (data)
-            {
-                $('#imageContainer').append(data);
-                $('#imageContainer img').click(function()
-                {
-                    openImage($(this));
-                });
-            },
-            error: function (jXHR, textStatus, errorThrown)
-            {
-                showNotice('danger', 'Loading of a thumbnail failed!');
-            },
-        });
+        $('#imageContainer').append(
+            $('<img filename="'+file+'"/>')
+                .attr('src', window.location.pathname + 'thumbs/' + file)
+                .click(function() { openImage($(this)); })
+        );
     }
 }
 

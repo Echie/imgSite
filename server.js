@@ -10,6 +10,9 @@ var validator = require('validator');
 var app = module.exports = express();
 app.use(bodyParser.urlencoded( { extended: true }));
 app.use(express.static('static'));
+app.use('/thumbs', express.static('uploads/thumbs'));
+app.use('/images', express.static('uploads/fullsize'));
+app.use('/comments', express.static('uploads/comments'));
 
 var debug = true;
 var port = 8000;
@@ -33,144 +36,71 @@ app.get('/', function (req, res)
 app.get('/uploads/names', function(req, res, next)
 {
     if (debug) console.log('GET: file names');
-    getImages(__dirname + '/uploads/thumbs', function (err, files)
+    getFileNames(__dirname + '/uploads/thumbs', function (err, files)
     {
         res.writeHead(200, {'Content-type':'text/plain'});
         res.end(files.join());
     });
 });
 
-// Get thumbnail
-app.get('/uploads/thumbs/*.*', function(req, res, next)
-{
-    if (debug) console.log('GET: ' + req.url);
-
-    var fileName = req.url.split("/").last();
-    var extension = fileName.split('.').last();
-
-    var data = fs.readFileSync(__dirname + req.url);
-
-    var imgHTML = '<img filename="'+fileName+
-        '" src="data:image/'+extension+';base64,';
-    imgHTML += new Buffer(data).toString('base64');
-    imgHTML += '"/>';
-
-    res.writeHead(200, {'Content-type':'text/html'});
-    res.end(imgHTML);
-
-});
-
-// Return an image + comments
+// Return an image specific page (with the image)
 app.get('/img/*', function(req, res, next)
 {
     var fileName = req.url.split("/").last();
-
     if (debug) console.log('GET image: ' + fileName);
 
-    var imgPath = __dirname + '/uploads/fullsize/' + fileName;
-
-    var data, extension;
-
-    // Try to open image with all accepted file extensions
-    acceptedFileTypes.every(function(el, ind, arr)
+    // Find out the extension (it's not in the url)
+    var extension;
+    var files = fs.readdirSync(__dirname + '/uploads/thumbs');
+    files.forEach(function(name, ind, arr)
     {
-        try { data = fs.readFileSync(imgPath + el); }
-        catch (e)
-        {
-            // Continue if expected error, log otherwise
-            if (e.code === 'ENOENT') return true;
-            else console.error(e);
-        }
-        if (data != undefined)
-        {
-            extension = el;
-            return false;
-        }
+        if (typeof name == 'string' && fileName == name.split('.')[0])
+            extension = '.'.concat(name.split('.')[1]);
     });
 
-    // Form response
-    var imgSrc = '';
-    imgSrc += 'data:image/'+extension+';base64,';
-    imgSrc += new Buffer(data).toString('base64');
-
     var $ = cheerio.load(fs.readFileSync(__dirname + '/img.html'));
-    $('#img').attr('src', imgSrc);
-
-    // Open JSON file
-    var commentPath = __dirname + '/uploads/comments/' + fileName + '.json';
-    var commentsJSON;
-    try { commentsJSON = fs.readFileSync(commentPath); }
-    catch (e)
-    {
-        // Create file if there's no comments
-        if (e.code === 'ENOENT')
-        {
-            fs.writeFileSync(commentPath, '[]');
-            console.log('Created comment file for: ' + fileName);
-            commentsJSON = '[]';
-        }
-        else console.error(e);
-    }
-
-    var comments = JSON.parse(commentsJSON);
-
-    for(var i = 0; i < comments.length; i++)
-    {
-        var comment = comments[i];
-
-        $('#comments').append('<li class="list-group-item">' +
-            '<p class="p-timestamp">' + comment['timestamp'] + '</p>' +
-            '<p class="p-comment">' + comment['text'] + '</p>');
-        $('#comments').append('</li>');
-
-    }
-    res.send($.html());
+    console.log('src url: ' + '/images/' + fileName + extension);
+    $('#img').attr('src', '/images/' + fileName + extension);
+    return res.send($.html());
 });
 
 // Post a comment
 app.post('/img/*', function(req, res, next)
 {
     var fileName = req.url.split('/').last();
+    var text = validator.escape(req.body.text); // Sanitize Comment
+    var time = req.body.timestamp;
 
-    if (debug) console.log('Comment posted on: ' + fileName + ': ' + req.body.comment);
+    if (debug) console.log('Comment posted on: ' + fileName + ': ' + text);
 
-    // Sanitize Comment
-    var text = validator.escape(req.body.comment);
-
-    // Open and parse comments
-    var commentPath = __dirname + '/uploads/comments/' + fileName + '.json';
+    // Open and parse comments from JSON file
     var commentsJSON;
-    try { commentsJSON = fs.readFileSync(commentPath); }
+    try {
+        commentsJSON = JSON.parse(fs.readFileSync(__dirname +
+            '/uploads/comments/' + fileName + '.json'));
+    }
     catch (e)
     {
         console.error(e);
         return res.status(404).end('Error while opening comment file.');
     }
 
-    var comments = JSON.parse(commentsJSON);
-
-    // Form timestamp string
-    var date = new Date(Date.now());
-
-    var time = date.getDate() + '.' + (date.getMonth()+1) + '.' +
-    date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() +
-    ':'+ date.getSeconds();
-
-    // Push new comments to array
-    comments.push({
+    // Push new comment to array
+    commentsJSON.push({
             "timestamp": time,
             "text": text
         })
 
     // Update file
-    fs.writeFile(commentPath, JSON.stringify(comments), function(err) {
+    fs.writeFile(__dirname + '/uploads/comments/' + fileName + '.json',
+        JSON.stringify(commentsJSON), function(err) {
 
-        if(err)
-        {
-            console.error(err);
-            return res.status(403).end('Error while saving comment');
-        }
-        console.log("Comment was saved.");
+            if(err)
+            {
+                console.error(err);
+                return res.status(403).end('Error while saving comment');
+            }
+            console.log("Comment was saved.");
     });
 
     res.sendStatus(200);
@@ -260,21 +190,21 @@ if (!Array.prototype.last) {
     };
 };
 
-function getImages(imageDir, callback)
+function getFileNames(dir, callback)
 {
     var files = [];
     var i;
-    fs.readdir(imageDir, function (err, list)
+    fs.readdir(dir, function (err, list)
     {
-	if (typeof list != 'undefined')
-	{
-	        for(i=0; i<list.length; i++)
+    	if (typeof list != 'undefined')
+    	{
+            for(i=0; i<list.length; i++)
         	{
-	            // Store the file name into the array files
-	            if (acceptedFileTypes.indexOf(path.extname(list[i])) > -1)
-	                files.push(list[i]);
-	        }
-	}
+                // Store the file name into the array files
+                if (acceptedFileTypes.indexOf(path.extname(list[i])) > -1)
+                    files.push(list[i]);
+            }
+    	}
     callback(err, files);
     });
 }
