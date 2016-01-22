@@ -1,5 +1,3 @@
-// TODO: Images and comments served as static?
-
 $(document).ready(function()
 {
     $('#noticeDiv').hide();
@@ -89,7 +87,7 @@ function getThumbnails(files)
 
 function openImage(el)
 {
-    var name = el.attr('filename').split('.')[0]
+    var name = el.attr('filename').split('.')[0];
     window.location.href = '/img/' + name;
 }
 
