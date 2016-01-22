@@ -3,7 +3,6 @@ An ongoing demo project implemented with Node.js. Upload images and comment on t
 
 ToDo:
 - Image scaling
-- Rationalize & move functionality to client side
 - Ordering of thumbnails
 - Improve UI
 - Security and error checks, user feedback
