@@ -5,7 +5,7 @@ var lwip = require('lwip');
 var randomstring = require("randomstring");
 var path = require('path');
 var cheerio = require('cheerio');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
 var validator = require('validator');
 var app = module.exports = express();
 app.use(bodyParser.urlencoded( { extended: true }));
@@ -24,12 +24,6 @@ acceptedHeaders.forEach(function(el, ind, arr)
 {
     el = el.substr(1);
     acceptedHeaders[ind] = 'image/' + el;
-});
-
-app.get('/', function (req, res)
-{
-    if (debug) console.log('GET: index.html');
-    res.send(fs.readFileSync("index.html", "utf8"));
 });
 
 // Return image filenames
@@ -89,7 +83,7 @@ app.post('/img/*', function(req, res, next)
     commentsJSON.push({
             "timestamp": time,
             "text": text
-        })
+        });
 
     // Update file
     fs.writeFile(__dirname + '/uploads/comments/' + fileName + '.json',
@@ -132,7 +126,7 @@ app.post('/uploads', function(req, res, next)
             imgSizeLimitMB + 'MB');
 
         // Check extension
-        if (!(acceptedHeaders.indexOf(type) > -1))
+        if (acceptedHeaders.indexOf(type) < 0)
             return res.status(403).send('Only .png, .jpg and .jpeg allowed');
         else
             extension = type.split('/').last();
@@ -202,7 +196,7 @@ if (!Array.prototype.last) {
     Array.prototype.last = function() {
         return this[this.length - 1];
     };
-};
+}
 
 function getFileNames(dir, callback)
 {

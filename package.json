@@ -1,0 +1,28 @@
+{
+  "name": "imgsite",
+  "version": "1.0.0",
+  "description": "Testing project for node & front-end libraries",
+  "main": "server.js",
+  "dependencies": {
+    "cheerio": "^0.20.0",
+    "express": "^4.14.0",
+    "lwip": "^0.0.9",
+    "multiparty": "^4.1.2",
+    "randomstring": "^1.1.5",
+    "body-parser": "^1.15.2",
+    "validator": "^5.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.10.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Echie/imgSite.git"
+  },
+  "author": "Teemu Huovinen",
+  "homepage": "https://github.com/Echie/imgSite#readme"
+}
