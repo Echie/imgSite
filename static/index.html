@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>imgSite</title>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script src="https://npmcdn.com/react@15.3.1/dist/react.js"></script>
     <script src="https://npmcdn.com/react-dom@15.3.1/dist/react-dom.js"></script>
     <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
@@ -27,7 +28,7 @@
 
             <input type="file" id="addFile" name="imgFile" accept=".png, .jpg"/>
             <br>
-            <button id="sendButton" disabled>Upload</button>
+            <div id="buttonContainer"> </div>
 
         </form>
     </div>
@@ -35,7 +36,5 @@
         <div id="imageContainer"></div>
         <br>
     </div>
-
-    <div id="example"></div>
   </body>
 </html>

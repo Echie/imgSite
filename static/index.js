@@ -1,20 +1,43 @@
+var UploadButton = React.createClass({
+    getInitialState: function() {
+        if (window.File && window.FileReader && window.FileList && window.Blob)
+            return {disabled: false};
+        else
+            showNotice('danger', 'File APIs not supported.');
+            return {disabled: true};
+    },
+
+    render: function() {
+        return (
+            <button disabled={this.state.disabled}>
+                Upload
+            </button>
+        )
+    }
+});
+
 var Thumbnails = React.createClass({
 
     // Read image filenames to state
     getInitialState: function() {
-        var results;
-        var req = new XMLHttpRequest();
-
-        req.onreadystatechange = function() {
-            if (req.readyState==4 && req.status==200) {
-                results = req.responseText;
-            }
-        }
-        req.open("GET", window.location.pathname + 'uploads/names', false );
-        req.send();
+        var result = [];
+        $.ajax(
+        {
+            async: false,
+            url : window.location.pathname + 'uploads/names',
+            type: "GET",
+            success: function (data)
+            {
+                result = data.split(',');
+            },
+            error: function (jXHR, textStatus, errorThrown)
+            {
+                showNotice('danger', 'Something went wrong!');
+            },
+        });
 
         return {
-            fileNames: results.split(',')
+            fileNames: result
         };
     },
 
@@ -34,6 +57,19 @@ ReactDOM.render(
     <Thumbnails />,
     document.getElementById('imageContainer')
 );
+
+ReactDOM.render(
+    <UploadButton />,
+    document.getElementById('buttonContainer')
+);
+
+function showNotice(type, msg)
+{
+    $('#noticeDiv').removeClass('alert-danger').removeClass('alert-success');
+
+    $('#noticeDiv').empty().show().addClass('alert-'+type).append(msg);
+    setTimeout(function() { $('#noticeDiv').fadeOut('slow'); }, 3000)
+}
 
 /*
 $(document).ready(function()
@@ -87,41 +123,6 @@ $(document).ready(function()
         showNotice('success', 'Image uploaded succesfully!');
     });
 });
-
-// Get names of images on server
-function getFileNames()
-{
-    var files = [];
-    $.ajax(
-    {
-        async: false,
-        url : window.location.pathname + 'uploads/names',
-        type: "GET",
-        success: function (data)
-        {
-            files = data.split(',');
-        },
-        error: function (jXHR, textStatus, errorThrown)
-        {
-            showNotice('danger', 'Something went wrong!');
-        },
-    });
-    return files;
-}
-
-function getThumbnails(files)
-{
-    $('#imageContainer').empty()
-    for (var ind in files)
-    {
-        var file = files[ind];
-        $('#imageContainer').append(
-            $('<img filename="'+file+'"/>')
-                .attr('src', window.location.pathname + 'thumbs/' + file)
-                .click(function() { openImage($(this)); })
-        );
-    }
-}
 
 function openImage(el)
 {
