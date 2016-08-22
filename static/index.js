@@ -1,3 +1,41 @@
+var Thumbnails = React.createClass({
+
+    // Read image filenames to state
+    getInitialState: function() {
+        var results;
+        var req = new XMLHttpRequest();
+
+        req.onreadystatechange = function() {
+            if (req.readyState==4 && req.status==200) {
+                results = req.responseText;
+            }
+        }
+        req.open("GET", window.location.pathname + 'uploads/names', false );
+        req.send();
+
+        return {
+            fileNames: results.split(',')
+        };
+    },
+
+    render: function() {
+        return (
+            <div>
+                {this.state.fileNames.map(function(fileName, index) {
+                    var filePath = window.location.pathname + 'thumbs/' + fileName;
+                    return <img src={filePath} alt={filePath} key={index} className="img-responsive"/>;
+                })}
+            </div>
+        );
+    }
+});
+
+ReactDOM.render(
+    <Thumbnails />,
+    document.getElementById('imageContainer')
+);
+
+/*
 $(document).ready(function()
 {
     $('#noticeDiv').hide();
@@ -98,3 +136,4 @@ function showNotice(type, msg)
     $('#noticeDiv').empty().show().addClass('alert-'+type).append(msg);
     setTimeout(function() { $('#noticeDiv').fadeOut('slow'); }, 3000)
 }
+*/

@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
+    <meta charset="UTF-8" />
     <title>imgSite</title>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="index.js"></script>
-    <link rel="stylesheet" type="text/css" href="/bootstrap.flatly.min.css">
+    <script src="https://npmcdn.com/react@15.3.1/dist/react.js"></script>
+    <script src="https://npmcdn.com/react-dom@15.3.1/dist/react-dom.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+    <script type="text/babel" src="index.js"></script>
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap.flatly.min.css">
     <link rel="stylesheet" type="text/css" href="/style.css">
-</head>
+  </head>
+  <body>
 
-<body>
     <div class="page-header">
         <h1>Puppies</h1>
         <h4>Because who doesn't like puppies</h4>
     </div>
 
-    <!-- <h2>Because who doesn't like puppies</h2> -->
     <div class="container">
         <br>
         <div id="noticeDiv" class="alert alert-dismissible">
@@ -34,6 +36,6 @@
         <br>
     </div>
 
-</body>
-
+    <div id="example"></div>
+  </body>
 </html>
